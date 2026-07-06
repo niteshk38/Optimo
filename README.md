@@ -2,6 +2,8 @@
 
 _An open-source, AI-powered job search agent._
 
+![Optimo — AI-powered job search](docs/optimo.png)
+
 Optimo pulls real job listings from multiple sources, ranks them against your
 resume with an AI fit score + reasons, helps you tailor each application, and
 tracks your pipeline — all locally, with you in control.
