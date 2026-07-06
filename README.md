@@ -7,8 +7,9 @@ from legitimate sources, ranks them against your resume with explanations, helps
 you tailor each application, and tracks your pipeline — all locally, with a human
 in the loop.
 
-Works fully **offline and free** with a local model via [Ollama](https://ollama.com),
-or plug in any OpenAI-compatible API.
+AI is **free** either way — run a local model with [Ollama](https://ollama.com)
+(offline, private), or use a free hosted API like [Groq](https://console.groq.com)
+(no GPU needed). Any OpenAI-compatible provider works — just set three env vars.
 
 ---
 
