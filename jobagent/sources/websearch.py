@@ -17,7 +17,7 @@ API sources; think of this as "the right links, by role."
 
 from __future__ import annotations
 
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
@@ -26,6 +26,22 @@ from .base import JobSource
 
 CSE_ENDPOINT = "https://www.googleapis.com/customsearch/v1"
 SERPER_ENDPOINT = "https://google.serper.dev/search"
+
+
+def _clean_job_url(link: str) -> str:
+    """Turn a LinkedIn *search* link into the direct job page.
+
+    Search results often point at `.../jobs/search/?currentJobId=123&...` — the
+    `currentJobId` is the actual posting id, so rewrite it to `/jobs/view/123`
+    which opens that specific job instead of a search results page.
+    """
+    if not link:
+        return link
+    if "linkedin.com/jobs/search" in link and "currentJobId=" in link:
+        jid = parse_qs(urlparse(link).query).get("currentJobId", [None])[0]
+        if jid and jid.isdigit():
+            return f"https://www.linkedin.com/jobs/view/{jid}"
+    return link
 
 
 class WebSearchSource(JobSource):
@@ -57,6 +73,7 @@ class WebSearchSource(JobSource):
             q = f"{query}{loc} site:{site}" if site else f"{query}{loc}"
             results = self._serper(q, num) if self._has_serper else self._cse(q, num)
             for title, link, snippet in results:
+                link = _clean_job_url(link)
                 domain = urlparse(link).netloc.replace("www.", "") if link else ""
                 jobs.append(
                     Job(
