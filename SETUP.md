@@ -56,10 +56,12 @@ Best if your machine can't run a local model. Sign up (no credit card):
 2. In `.env`:
    ```
    LLM_BASE_URL=https://api.groq.com/openai/v1
-   LLM_MODEL=llama-3.1-8b-instant
+   LLM_MODEL=llama-3.3-70b-versatile
    LLM_API_KEY=gsk_your_key
    ```
-   (Model names change — see <https://console.groq.com/docs/models>.)
+   (`70b-versatile` gives clearly better fit reasoning than small models;
+   `llama-3.1-8b-instant` is faster/higher-limit if you prefer. Model names change —
+   see <https://console.groq.com/docs/models>.)
 
 Any other OpenAI-compatible provider (OpenAI, Together, etc.) works the same way —
 just change those three values.
@@ -75,7 +77,7 @@ silently** if its key is missing, so you can add them one at a time.
 |--------|----------|------------------|-------|
 | **remoteok** | Remote tech jobs | none | ✅ works instantly |
 | **jsearch** | **LinkedIn, Indeed, Glassdoor** | `RAPIDAPI_KEY` | ✅ ~200 requests/mo |
-| **websearch** | **Instahyre, LinkedIn, Naukri** (links) | `GOOGLE_CSE_KEY` + `GOOGLE_CSE_CX` | ✅ 100 searches/day |
+| **websearch** | **Instahyre, LinkedIn, Naukri** (links) | `SERPER_API_KEY` (or Google CSE) | ✅ ~2,500 free searches |
 | **adzuna** | Multi-country listings | `ADZUNA_APP_ID` + `ADZUNA_APP_KEY` | ✅ free tier |
 | **greenhouse** | Specific company boards | none (list boards in config) | ✅ |
 
@@ -93,21 +95,29 @@ silently** if its key is missing, so you can add them one at a time.
   LinkedIn results. Resets monthly.
 
 ### 4b. websearch → Instahyre / LinkedIn / Naukri
-Returns result *links* (title + snippet), not full descriptions.
-1. **API key:** <https://console.cloud.google.com/apis/library/customsearch.googleapis.com>
-   → **Enable** → then **Credentials → Create credentials → API key**. Create the key in
-   the **same project** where you enabled the API; if it forces a restriction, pick
-   **Custom Search API**.
-2. **Engine ID:** <https://programmablesearchengine.google.com/controlpanel/create>
-   → under **"Sites to search"** add `linkedin.com/jobs`, `instahyre.com`, `naukri.com`
-   (the old "Search the entire web" toggle is deprecated) → **Create** → copy the
-   **Search engine ID**.
-3. In `.env`:
+Returns result *links* (title + snippet), not full descriptions. There are two
+backends; the app auto-uses whichever key is present, with **Serper preferred**.
+
+**Option 1 — Serper (recommended — one key, no hassle):**
+1. Sign up at <https://serper.dev> (Google login; free tier ~2,500 searches).
+2. Dashboard → **API Key** → copy it → `.env`:
    ```
-   GOOGLE_CSE_KEY=your_api_key
-   GOOGLE_CSE_CX=your_engine_id
+   SERPER_API_KEY=your_key
    ```
-Keep `websearch.sites` in `config.yaml` in sync with the engine's "Sites to search".
+Done. No Google Cloud setup.
+
+**Option 2 — Google Custom Search (fallback only):**
+1. Enable **Custom Search API** at
+   <https://console.cloud.google.com/apis/library/customsearch.googleapis.com>,
+   then create an **API key** in that **same project**.
+2. Create an engine at <https://programmablesearchengine.google.com/controlpanel/create>,
+   add `linkedin.com/jobs`, `instahyre.com`, `naukri.com` under **"Sites to search"**,
+   copy the **Search engine ID**.
+3. In `.env`: `GOOGLE_CSE_KEY=...` and `GOOGLE_CSE_CX=...`
+   > ⚠️ Brand-new Google Cloud projects can take up to ~1 hr to activate, and some
+   > accounts gate the API entirely. **Serper avoids all of this** — prefer it.
+
+Which sites are searched is set by `websearch.sites` in `config.yaml`.
 
 ### 4c. adzuna (optional)
 Free `app_id` / `app_key` from <https://developer.adzuna.com> → `.env` as
@@ -126,7 +136,9 @@ LLM_API_KEY=
 # --- Jobs: LinkedIn/Indeed/Glassdoor ---
 RAPIDAPI_KEY=
 
-# --- Jobs: Instahyre/LinkedIn/Naukri (both required) ---
+# --- Jobs: Instahyre/LinkedIn/Naukri links (websearch) ---
+# Preferred: Serper (one key). Or Google CSE as a fallback (needs BOTH keys).
+SERPER_API_KEY=
 GOOGLE_CSE_KEY=
 GOOGLE_CSE_CX=
 
@@ -149,7 +161,7 @@ sources:
 
 matcher:
   llm_weight: 0.7        # 0..1 — how much the AI score counts vs keywords
-  rerank_k: 8            # how many top jobs the AI re-scores
+  rerank_k: 15           # how many top jobs the AI re-scores (more = more ✅/⚠️, more LLM calls)
 ```
 
 ---
@@ -161,6 +173,7 @@ matcher:
 | jsearch returns nothing | Not subscribed to JSearch on RapidAPI (step 4a.3), or monthly quota used up (resets monthly). |
 | "No LLM reachable" in Tailor | Start Ollama, or set the Groq `LLM_*` keys in `.env`. |
 | Few LinkedIn jobs | Raise `num_pages` in `config.yaml`. |
-| websearch off | Needs **both** `GOOGLE_CSE_KEY` and `GOOGLE_CSE_CX`. |
-| websearch: "project does not have access to Custom Search JSON API" | Enable Custom Search API on the **same project** as your key. A brand-new project can take up to ~1 hour to activate — it starts working on its own. |
+| websearch off | Set `SERPER_API_KEY` (easiest), or **both** `GOOGLE_CSE_KEY` and `GOOGLE_CSE_CX`. |
+| websearch: "project does not have access to Custom Search JSON API" | A Google-CSE-only problem: enable Custom Search API on the **same project** as your key (new projects take up to ~1 hr; some accounts gate it). **Just use `SERPER_API_KEY` instead** — no Google Cloud needed. |
+| no ✅/⚠️ on lower jobs | Only the top `rerank_k` jobs get AI reasons/concerns — raise it in `config.yaml`. |
 | Changed `.env` but nothing happened | Restart the app — keys are read once at startup. |

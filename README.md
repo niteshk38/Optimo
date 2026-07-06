@@ -16,7 +16,7 @@ or plug in any OpenAI-compatible API.
 
 | Capability | What you get |
 |---|---|
-| 🔎 **Find & rank** | Fetches jobs from **LinkedIn, Indeed, Glassdoor** (JSearch), **Instahyre, Naukri** (Google search), RemoteOK, Adzuna, and Greenhouse boards — de-duplicated and ranked by fit with a score + reasons. |
+| 🔎 **Find & rank** | Fetches jobs from **LinkedIn, Indeed, Glassdoor** (JSearch), **Instahyre, Naukri** (web search), RemoteOK, Adzuna, and Greenhouse boards — de-duplicated and ranked by fit with a score + reasons. |
 | ✍️ **Tailor** | Drafts a grounded cover letter and rewrites resume bullets for a specific role — using only what's actually on your resume. |
 | 📋 **Track** | Saves applications to a local SQLite database, moves them through statuses, and exports to CSV. |
 
@@ -42,7 +42,7 @@ cp .env.example .env    # put your free keys here later
 **That's enough to run** — you'll get RemoteOK jobs with keyword ranking.
 
 To unlock **AI ranking** and **LinkedIn / Instahyre / Indeed** sources, add free keys.
-Every step (Groq or Ollama for AI, RapidAPI for LinkedIn, Google for Instahyre) is
+Every step (Groq or Ollama for AI, RapidAPI for LinkedIn, Serper for Instahyre) is
 on one page: **👉 [SETUP.md](SETUP.md)**.
 
 ### Run the CLI
