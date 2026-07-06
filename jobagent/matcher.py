@@ -26,7 +26,11 @@ _RERANK_SYSTEM = (
     "skills or more experience than asked — that is a strength, not a risk. NEVER write "
     "that the candidate's skills are 'not mentioned in the job description' — that is "
     "irrelevant. If there are no genuine concerns, return an empty concerns array. "
-    "Be honest and accurate, not flattering and not nit-picking."
+    "Be honest and accurate, not flattering and not nit-picking.\n\n"
+    "IMPORTANT: If the CANDIDATE section says 'NOT PROVIDED', you have NO information "
+    "about the candidate. Do NOT claim they lack skills or experience and do NOT invent "
+    "a seniority mismatch — return an EMPTY concerns array, and base the score only on "
+    "how well the job matches the search intent."
 )
 
 
@@ -74,10 +78,20 @@ def rank(
 
 
 def _rerank_prompt(profile: Profile, job: Job) -> str:
+    # No resume attached -> tell the model explicitly so it doesn't read the
+    # empty profile as "candidate has 0 years / no skills" and invent gaps.
+    has_profile = bool(profile.skills or profile.years_experience or profile.raw_text.strip())
+    if has_profile:
+        candidate = (
+            f"Headline: {profile.headline or 'n/a'}\n"
+            f"Skills: {', '.join(profile.skills) or 'n/a'}\n"
+            f"Years of experience: {profile.years_experience}\n"
+            f"Summary: {profile.summary[:600]}"
+        )
+    else:
+        candidate = "NOT PROVIDED (no resume attached)"
     return (
-        f"CANDIDATE\nHeadline: {profile.headline}\n"
-        f"Skills: {', '.join(profile.skills) or 'n/a'}\n"
-        f"Years: {profile.years_experience}\nSummary: {profile.summary[:600]}\n\n"
+        f"CANDIDATE\n{candidate}\n\n"
         f"JOB\nTitle: {job.title}\nCompany: {job.company}\n"
         f"Location: {job.location}\nDescription: {job.description[:1500]}"
     )
