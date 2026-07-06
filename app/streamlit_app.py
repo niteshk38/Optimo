@@ -86,7 +86,7 @@ st.markdown(
     [data-testid="stToolbar"] { right: .5rem; pointer-events: auto; }
 
     .block-container {
-        position: relative; z-index: 1; padding-top: 7rem; padding-bottom: 4rem;
+        position: relative; z-index: 1; padding-top: 7rem; padding-bottom: 6rem;
         max-width: 1180px;
     }
 
@@ -304,23 +304,26 @@ st.markdown(
     }
     .reason { color: #b6f5d6; } .concern { color: #ffdfb0; }
 
-    /* Footer */
+    /* Footer — pinned to the bottom of the viewport */
     .app-footer {
-        position: relative; max-width: 640px; margin: 4rem auto 1.5rem;
-        padding-top: 1.9rem; text-align: center;
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 500;
+        padding: .5rem 1rem .45rem; text-align: center;
+        background: linear-gradient(0deg, rgba(9,11,16,0.96), rgba(9,11,16,0.55) 70%, transparent);
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border-top: 1px solid rgba(150,160,190,0.12);
         font-family: 'Space Grotesk', system-ui, sans-serif;
+        pointer-events: none;   /* bar is click-through; only links catch clicks */
     }
-    .app-footer::before {   /* glowing gradient hairline instead of a flat rule */
-        content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-        width: 200px; height: 2px; border-radius: 2px;
-        background: linear-gradient(90deg, transparent, var(--cyan), var(--violet), transparent);
-        box-shadow: 0 0 14px rgba(34, 211, 238, .55);
+    .app-footer::before {   /* glowing gradient hairline along the top edge */
+        content: ""; position: absolute; top: -1px; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--cyan), var(--violet), var(--pink), transparent);
+        opacity: .7;
     }
-    .app-footer .ft-tag { color: #c3cdea; font-size: .95rem; font-weight: 500; margin-bottom: .55rem; }
-    .app-footer .ft-meta { color: var(--muted); font-size: .82rem; letter-spacing: .3px; }
-    .app-footer a { color: var(--cyan) !important; text-decoration: none; font-weight: 600; }
+    .app-footer .ft-tag { color: #c3cdea; font-size: .88rem; font-weight: 500; margin-bottom: .12rem; }
+    .app-footer .ft-meta { color: var(--muted); font-size: .78rem; letter-spacing: .3px; }
+    .app-footer a { pointer-events: auto; color: var(--cyan) !important; text-decoration: none; font-weight: 600; }
     .app-footer a:hover { text-decoration: underline; }
-    .app-footer .sep { opacity: .35; margin: 0 .55rem; }
+    .app-footer .sep { opacity: .35; margin: 0 .5rem; }
 
     h1, h2, h3, h4 { font-family: 'Orbitron', sans-serif; color: #eef3ff; letter-spacing: .5px; }
     </style>
