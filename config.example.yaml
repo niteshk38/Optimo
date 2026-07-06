@@ -43,7 +43,7 @@ sources:
 
 matcher:
   llm_weight: 0.7          # blend of LLM judgment vs keyword overlap (0..1)
-  rerank_k: 8              # how many top keyword hits to re-score with the LLM
+  rerank_k: 15              # how many top keyword hits to re-score with the LLM
 
 preferences:
   db_path: data/applications.db

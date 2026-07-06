@@ -279,15 +279,25 @@ st.markdown(
     }
     a.pill { text-decoration: none !important; }
     a.pill:hover { border-color: var(--cyan); color: #bff3ff !important; }
-    .fit-badge {
-        display: block; text-align: center; font-family: 'Orbitron', sans-serif;
-        font-weight: 800; font-size: 1.15rem; padding: .35rem 0; border-radius: 12px;
-        margin-bottom: .5rem; line-height: 1;
+    /* Fit score — donut ring gauge (fill % + color set inline per card) */
+    .fit-ring {
+        width: 78px; height: 78px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: .1rem auto .35rem;
     }
-    .fit-badge .lbl { display: block; font-size: .52rem; letter-spacing: 1.5px; opacity: .8; margin-top: .15rem; }
-    .fit-hi { color: #05130d; background: linear-gradient(135deg, #34d399, #22d3ee); box-shadow: 0 0 18px rgba(52,211,153,.4); }
-    .fit-md { color: #05070f; background: linear-gradient(135deg, #22d3ee, #a855f7); box-shadow: 0 0 18px rgba(34,211,238,.35); }
-    .fit-lo { color: #e8eeff; background: rgba(255,255,255,.07); border: 1px solid var(--brd); }
+    .fit-ring-inner {
+        width: 60px; height: 60px; border-radius: 50%;
+        background: #15171d;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Space Grotesk', system-ui, sans-serif; font-weight: 700;
+        font-size: 1.4rem; letter-spacing: -.5px; color: #eef3ff;
+        font-variant-numeric: tabular-nums;
+    }
+    .fit-label {
+        text-align: center; font-family: 'Space Grotesk', sans-serif; font-weight: 600;
+        font-size: .68rem; letter-spacing: 1px; text-transform: uppercase; opacity: .9;
+        margin-bottom: .5rem;
+    }
     .reason, .concern {
         font-family: 'Space Grotesk', system-ui, sans-serif; font-size: .94rem;
         line-height: 1.45; margin: .15rem 0;
@@ -439,12 +449,28 @@ components.html(
 
 _PORTAL_PRETTY = {"remoteok": "RemoteOK", "adzuna": "Adzuna", "greenhouse": "Greenhouse"}
 
+# Collapse country/subdomains and publisher variants to one brand, so
+# 'web:in.linkedin.com', 'web:sg.linkedin.com' and 'jsearch:LinkedIn' all
+# become a single "LinkedIn" in the filter and pills.
+_PORTAL_BRANDS = [
+    ("linkedin", "LinkedIn"),
+    ("instahyre", "Instahyre"),
+    ("naukri", "Naukri"),
+    ("indeed", "Indeed"),
+    ("glassdoor", "Glassdoor"),
+    ("foundit", "Foundit"),
+]
+
 
 def portal_name(source: str) -> str:
-    """Clean portal label for display/filtering: 'jsearch:LinkedIn' -> 'LinkedIn',
-    'web:in.linkedin.com' -> 'in.linkedin.com', 'remoteok' -> 'RemoteOK'."""
+    """Clean portal label for display/filtering: 'jsearch:LinkedIn' and
+    'web:in.linkedin.com' both -> 'LinkedIn'; 'remoteok' -> 'RemoteOK'."""
     name = source.split(":", 1)[1] if ":" in source else source
-    return _PORTAL_PRETTY.get(name.lower(), name)
+    low = name.lower()
+    for needle, brand in _PORTAL_BRANDS:
+        if needle in low:
+            return brand
+    return _PORTAL_PRETTY.get(low, name)
 
 
 def job_age_days(posted_at) -> int | None:
@@ -492,9 +518,8 @@ with search_tab:
         type=["pdf", "txt", "md"],
         help=f"Max {MAX_RESUME_MB} MB.",
     )
-    resume_text = st.text_area("…or paste your resume instead", height=140)
+    resume_text = ""  # populated from the attached file below
 
-    # An attached file wins over the paste box; fall back to it only if empty.
     if resume_file is not None and resume_file.size > MAX_RESUME_MB * 1024 * 1024:
         st.error(f"{resume_file.name} is {resume_file.size / 1024 / 1024:.1f} MB — "
                  f"please attach a resume under {MAX_RESUME_MB} MB.")
@@ -504,10 +529,9 @@ with search_tab:
             extracted = read_resume_bytes(resume_file.name, resume_file.getvalue())
             if extracted.strip():
                 resume_text = extracted
-                st.success(f"Read {len(extracted):,} characters from {resume_file.name}")
             else:
                 st.warning(f"Couldn't extract text from {resume_file.name} "
-                           "(is it a scanned image?). Paste the text instead.")
+                           "(is it a scanned image?). Try a text-based PDF or a .txt/.md file.")
         except Exception as exc:
             st.error(f"Could not read {resume_file.name}: {exc}")
 
@@ -553,8 +577,9 @@ with search_tab:
             use_ai = use_llm and llm_ok
             if jobs and use_ai:
                 k = min(len(jobs), int(config.matcher.get("rerank_k", 8)))
-                status.write(f"✨ Scoring the top {k} with AI "
-                             "(local model — this can take ~20s)…")
+                is_local = "localhost" in llm.base_url or "127.0.0.1" in llm.base_url
+                speed = " — local model, can take ~20s" if is_local else ""
+                status.write(f"✨ Scoring the top {k} with AI ({llm.model}{speed})…")
             elif jobs:
                 status.write("Scoring by keyword overlap…")
 
@@ -665,9 +690,18 @@ with search_tab:
                 )
                 head.progress(min(r.score / 100, 1.0), text=f"AI fit score · {r.score:.0f}/100")
 
-                fit_cls = "fit-hi" if r.score >= 70 else ("fit-md" if r.score >= 40 else "fit-lo")
+                deg = round(min(r.score, 100) / 100 * 360)
+                if r.score >= 70:
+                    col, lab = "#34d399", "Strong match"
+                elif r.score >= 40:
+                    col, lab = "#22d3ee", "Good match"
+                else:
+                    col, lab = "#8ea0d0", "Fair match"
                 side.markdown(
-                    f'<div class="fit-badge {fit_cls}">{r.score:.0f}<span class="lbl">FIT</span></div>',
+                    f'<div class="fit-ring" style="background:conic-gradient('
+                    f'{col} {deg}deg, rgba(255,255,255,0.08) {deg}deg);">'
+                    f'<div class="fit-ring-inner">{r.score:.0f}</div></div>'
+                    f'<div class="fit-label" style="color:{col}">{lab}</div>',
                     unsafe_allow_html=True,
                 )
                 if r.job.id in tracked:
@@ -697,7 +731,7 @@ with tailor_tab:
     if not results:
         st.info("Run a search first, then come back to tailor an application.")
     elif not profile or not profile.raw_text:
-        st.warning("Attach (or paste) your resume on the Search tab so tailoring "
+        st.warning("Attach your resume on the Search tab so tailoring "
                    "has something to work from.")
     else:
         resume_name = st.session_state.get("resume_name", "your resume")
