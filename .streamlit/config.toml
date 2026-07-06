@@ -10,3 +10,6 @@ font = "sans serif"
 
 [client]
 toolbarMode = "minimal"
+
+[server]
+maxUploadSize = 10   # cap resume uploads at 10 MB (works on Streamlit Cloud too)

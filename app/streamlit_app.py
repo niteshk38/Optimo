@@ -306,19 +306,21 @@ st.markdown(
 
     /* Footer */
     .app-footer {
-        margin: 3.5rem auto 0; padding: 1.6rem 1rem 1rem; max-width: 1180px;
-        border-top: 1px solid var(--brd); text-align: center;
+        position: relative; max-width: 640px; margin: 4rem auto 1.5rem;
+        padding-top: 1.9rem; text-align: center;
         font-family: 'Space Grotesk', system-ui, sans-serif;
-        color: var(--muted); font-size: .85rem; line-height: 1.7;
     }
-    .app-footer .ft-brand {
-        font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1rem;
-        background: linear-gradient(92deg, var(--cyan), var(--violet) 55%, var(--pink));
-        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    .app-footer::before {   /* glowing gradient hairline instead of a flat rule */
+        content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+        width: 200px; height: 2px; border-radius: 2px;
+        background: linear-gradient(90deg, transparent, var(--cyan), var(--violet), transparent);
+        box-shadow: 0 0 14px rgba(34, 211, 238, .55);
     }
+    .app-footer .ft-tag { color: #c3cdea; font-size: .95rem; font-weight: 500; margin-bottom: .55rem; }
+    .app-footer .ft-meta { color: var(--muted); font-size: .82rem; letter-spacing: .3px; }
     .app-footer a { color: var(--cyan) !important; text-decoration: none; font-weight: 600; }
     .app-footer a:hover { text-decoration: underline; }
-    .app-footer .sep { opacity: .4; margin: 0 .5rem; }
+    .app-footer .sep { opacity: .35; margin: 0 .55rem; }
 
     h1, h2, h3, h4 { font-family: 'Orbitron', sans-serif; color: #eef3ff; letter-spacing: .5px; }
     </style>
@@ -780,11 +782,13 @@ with tracker_tab:
 st.markdown(
     """
     <div class="app-footer">
-        <div>Let AI find, rank &amp; tailor your next role — you make the call.</div>
-        <div>
+        <div class="ft-tag">Let AI find, rank &amp; tailor your next role — you make the call.</div>
+        <div class="ft-meta">
             Built by <a href="https://www.linkedin.com/in/niteshk38/" target="_blank"
             rel="noopener noreferrer">Nitesh</a>
-            <span class="sep">·</span> Open-source
+            <span class="sep">·</span>
+            <a href="https://github.com/niteshk38/Optimo" target="_blank"
+            rel="noopener noreferrer">Open-source</a>
             <span class="sep">·</span> © 2026
         </div>
     </div>
