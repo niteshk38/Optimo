@@ -10,6 +10,13 @@ tracks your pipeline — all locally, with you in control.
 
 Two ways to use it: a **Streamlit web UI** and a **CLI**. Both share the same core.
 
+> **▶️ Live demo:** [nitesh-optimo.streamlit.app](https://nitesh-optimo.streamlit.app)
+> — runs on shared free-tier keys, so it may hit rate limits.
+>
+> **⚡ Run your own (recommended):** clone this repo and add your own **free** API keys
+> for your own private instance with your own quota — setup is ~5 minutes
+> ([jump to Install & run](#1-install--run)). It even works with **zero keys** to start.
+
 ---
 
 ## What it does
