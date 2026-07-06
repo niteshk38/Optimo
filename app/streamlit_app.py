@@ -9,6 +9,7 @@ widgets.
 from __future__ import annotations
 
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -326,6 +327,18 @@ st.markdown(
     .app-footer .sep { opacity: .35; margin: 0 .5rem; }
 
     h1, h2, h3, h4 { font-family: 'Orbitron', sans-serif; color: #eef3ff; letter-spacing: .5px; }
+
+    /* --- Mobile: stop the header badge + fixed footer from overlapping --- */
+    @media (max-width: 640px) {
+        .hero-title { font-size: 1.55rem; }
+        .hero-sub { display: none; }                 /* decorative tagline — hide to keep header compact */
+        .li-badge { top: .5rem; right: .5rem; padding: .42rem; }
+        .li-badge span { display: none; }            /* icon-only so it can't overlap the title */
+        .block-container { padding-top: 5.5rem; padding-bottom: 4.5rem; }
+        .app-footer { background: #0a0b0f; }          /* opaque so content can't show through */
+        .app-footer .ft-tag { display: none; }        /* keep footer to one compact line */
+        .app-footer .ft-meta { font-size: .78rem; }
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -509,8 +522,9 @@ search_tab, tailor_tab, tracker_tab = st.tabs(["🔎 Search", "✍️ Tailor", "
 with search_tab:
     col1, col2 = st.columns([2, 1])
     with col1:
-        query = st.text_input("Search", value="Software Development Engineer in Test (SDET)")
-        location = st.text_input("Location", value="")
+        query = st.text_input("Search", value="",
+                              placeholder="Enter a role — e.g. Software Engineer, Marketing, Data Analyst")
+        location = st.text_input("Location", value="", placeholder="e.g. India, Remote, Bengaluru")
     with col2:
         freshness = st.selectbox("Posted", list(FRESHNESS), index=0,
                                  help="Filters LinkedIn/Indeed by post date.")
@@ -548,7 +562,10 @@ with search_tab:
             resume_file.name if resume_file is not None else "pasted resume"
         )
 
-    if st.button("Search", type="primary"):
+    search_clicked = st.button("Search", type="primary")
+    if search_clicked and not query.strip():
+        st.warning("Enter a role to search for.")
+    elif search_clicked:
         # Broken into visible steps so a slow local model reads as "working",
         # not "hung". Each step reports what it's doing and whether AI is on.
         with st.status("Working…", expanded=True) as status:
@@ -587,6 +604,12 @@ with search_tab:
                 status.write(f"✨ Scoring the top {k} with AI ({llm.model}{speed})…")
             elif jobs:
                 status.write("Scoring by keyword overlap…")
+
+            # Rank against the SEARCH QUERY (+ any resume skills), not the owner's
+            # default keywords — so "marketing", "data analyst", etc. surface the
+            # right jobs instead of biasing toward the config's SDET terms.
+            q_terms = re.findall(r"[A-Za-z][A-Za-z0-9+#./-]{2,}", query.lower())
+            profile.preferences = {**profile.preferences, "keywords": q_terms}
 
             st.session_state["results"] = rank(
                 profile, jobs, llm=llm if use_ai else None,
