@@ -1,0 +1,59 @@
+# Copy this to `config.yaml` and edit. If config.yaml is absent, the app reads
+# this file so it still runs out of the box. Secrets (API keys) go in `.env`,
+# never here.
+
+llm:
+  # Default is a local Ollama server: no API key, runs offline, free.
+  # Install Ollama (https://ollama.com), then: `ollama pull llama3.1`
+  # To use a hosted, OpenAI-compatible provider instead, change these two and
+  # set LLM_API_KEY in .env — no code changes needed.
+  base_url: http://localhost:11434/v1
+  model: llama3.1
+
+sources:
+  adzuna:
+    enabled: true
+    country: gb            # gb, us, au, ca, de, fr, in, ...
+  remoteok:
+    enabled: true          # no key required
+  greenhouse:
+    enabled: false
+    # Public company boards — the slug in boards.greenhouse.io/<token>.
+    boards:
+      - stripe
+      - airbnb
+  jsearch:
+    # Aggregator that reads Google for Jobs — surfaces listings originally from
+    # LinkedIn, Indeed, Glassdoor, company sites, etc. Needs a RapidAPI key
+    # (RAPIDAPI_KEY in .env); free Basic plan available. Disables itself without one.
+    enabled: true
+    country: in            # us, gb, in, ...
+    num_pages: 3           # each page ~10 results; free plans are limited
+  websearch:
+    # Plain Google web search via the official Custom Search API — returns links
+    # (title + snippet, no full description) from the sites you list. This is how
+    # you reach Instahyre and LinkedIn job pages by role. Needs GOOGLE_CSE_KEY and
+    # GOOGLE_CSE_CX in .env; free for 100 searches/day. Disables itself without them.
+    enabled: true
+    num: 10
+    sites:
+      - instahyre.com
+      - linkedin.com/jobs
+      - naukri.com
+
+matcher:
+  llm_weight: 0.7          # blend of LLM judgment vs keyword overlap (0..1)
+  rerank_k: 8              # how many top keyword hits to re-score with the LLM
+
+preferences:
+  db_path: data/applications.db
+  # Boost terms used when you don't supply a resume. If you do supply one, the
+  # extracted skills are used instead (or in addition).
+  keywords:
+    - sdet
+    - test automation
+    - selenium
+    - playwright
+    - qa
+    - api testing
+    - python

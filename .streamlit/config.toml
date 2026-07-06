@@ -1,0 +1,12 @@
+# Dark, on-brand base theme so Streamlit's native widgets (labels, inputs,
+# tabs, alerts, dataframes) match the custom neon CSS in app/streamlit_app.py.
+[theme]
+base = "dark"
+primaryColor = "#22d3ee"
+backgroundColor = "#0a0b0f"
+secondaryBackgroundColor = "#15171e"
+textColor = "#e8eeff"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"

@@ -1,0 +1,29 @@
+# Secrets & local config
+.env
+config.yaml
+.streamlit/secrets.toml
+
+# Local data (tracker db, cached searches, exports)
+data/
+*.db
+*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+
+# Editor/tooling local config
+.claude/
